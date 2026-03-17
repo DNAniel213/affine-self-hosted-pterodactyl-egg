@@ -19,15 +19,9 @@
   "startup": "bash /home/container/start.sh",
   "config": {
     "files": "{}",
-    "startup": {
-      "done": "Nest application successfully started",
-      "userInteraction": []
-    },
-    "stop": "^C",
-    "logs": {
-      "custom": false,
-      "location": "logs/latest.log"
-    }
+    "startup": "{\"done\": \"Nest application successfully started\"}",
+    "logs": "{}",
+    "stop": "^C"
   },
   "scripts": {
     "installation": {
@@ -54,7 +48,7 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": false,
-      "rules": "required|string|min:32",
+      "rules": "nullable|string",
       "field_type": "password"
     },
     {
@@ -64,7 +58,7 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": false,
-      "rules": "required|string",
+      "rules": "nullable|string",
       "field_type": "password"
     },
     {
@@ -94,7 +88,7 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": true,
-      "rules": "string",
+      "rules": "nullable|string",
       "field_type": "text"
     },
     {
@@ -124,7 +118,7 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": false,
-      "rules": "string",
+      "rules": "nullable|string",
       "field_type": "password"
     },
     {
@@ -154,7 +148,7 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": false,
-      "rules": "string",
+      "rules": "nullable|string",
       "field_type": "text"
     },
     {
@@ -164,7 +158,7 @@
       "default_value": "465",
       "user_viewable": true,
       "user_editable": false,
-      "rules": "numeric",
+      "rules": "nullable|numeric",
       "field_type": "text"
     },
     {
@@ -174,7 +168,7 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": false,
-      "rules": "string",
+      "rules": "nullable|string",
       "field_type": "text"
     },
     {
@@ -184,7 +178,7 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": false,
-      "rules": "string",
+      "rules": "nullable|string",
       "field_type": "password"
     },
     {
@@ -194,7 +188,7 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": false,
-      "rules": "string",
+      "rules": "nullable|string",
       "field_type": "text"
     }
   ]
