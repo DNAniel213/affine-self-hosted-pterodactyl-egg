@@ -9,7 +9,7 @@
   "author": "pterodactyl@dnaniel213.dev",
   "uuid": "5f3d2a8c-1b4e-4f7a-9c0e-2d6b8a3e5f7c",
   "description": "Host AFFiNE — the next-gen knowledge base and workspace — on Pterodactyl. Redis is bundled inside the container. Requires an external PostgreSQL 16+ database. See the README for full setup instructions.",
-  "features": null,
+  "features": [],
   "docker_images": {
     "AFFiNE Stable (Recommended)": "ghcr.io/dnaniel213/affine-pterodactyl:stable",
     "AFFiNE Beta": "ghcr.io/dnaniel213/affine-pterodactyl:beta",
@@ -94,7 +94,7 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": true,
-      "rules": "nullable|string",
+      "rules": "string",
       "field_type": "text"
     },
     {
@@ -124,7 +124,7 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": false,
-      "rules": "nullable|string",
+      "rules": "string",
       "field_type": "password"
     },
     {
@@ -154,7 +154,7 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": false,
-      "rules": "nullable|string",
+      "rules": "string",
       "field_type": "text"
     },
     {
@@ -164,7 +164,7 @@
       "default_value": "465",
       "user_viewable": true,
       "user_editable": false,
-      "rules": "nullable|numeric",
+      "rules": "numeric",
       "field_type": "text"
     },
     {
@@ -174,7 +174,7 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": false,
-      "rules": "nullable|string",
+      "rules": "string",
       "field_type": "text"
     },
     {
@@ -184,7 +184,7 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": false,
-      "rules": "nullable|string",
+      "rules": "string",
       "field_type": "password"
     },
     {
@@ -194,7 +194,7 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": false,
-      "rules": "nullable|string",
+      "rules": "string",
       "field_type": "text"
     }
   ]
