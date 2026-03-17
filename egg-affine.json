@@ -1,0 +1,201 @@
+{
+  "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+  "meta": {
+    "version": "PTDL_v2",
+    "update_url": "https://raw.githubusercontent.com/DNAniel213/affine-self-hosted-pterodactyl-egg/main/egg-affine.json"
+  },
+  "exported_at": "2026-03-16T00:00:00+00:00",
+  "name": "AFFiNE",
+  "author": "pterodactyl@dnaniel213.dev",
+  "uuid": "5f3d2a8c-1b4e-4f7a-9c0e-2d6b8a3e5f7c",
+  "description": "Host AFFiNE — the next-gen knowledge base and workspace — on Pterodactyl. Redis is bundled inside the container. Requires an external PostgreSQL 16+ database. See the README for full setup instructions.",
+  "features": null,
+  "docker_images": {
+    "AFFiNE Stable (Recommended)": "ghcr.io/dnaniel213/affine-pterodactyl:stable",
+    "AFFiNE Beta": "ghcr.io/dnaniel213/affine-pterodactyl:beta",
+    "AFFiNE Canary (Unstable)": "ghcr.io/dnaniel213/affine-pterodactyl:canary"
+  },
+  "file_denylist": [],
+  "startup": "bash /home/container/start.sh",
+  "config": {
+    "files": "{}",
+    "startup": {
+      "done": "Nest application successfully started",
+      "userInteraction": []
+    },
+    "stop": "^C",
+    "logs": {
+      "custom": false,
+      "location": "logs/latest.log"
+    }
+  },
+  "scripts": {
+    "installation": {
+      "script": "#!/bin/bash\napk add --no-cache openssl bash 2>/dev/null || true\n\necho \"=========================================\"\necho \"  AFFiNE - Pterodactyl Installer\"\necho \"  github.com/DNAniel213/affine-self-hosted-pterodactyl-egg\"\necho \"=========================================\"\necho \"\"\n\nmkdir -p /mnt/server/storage\nmkdir -p /mnt/server/config\nmkdir -p /mnt/server/redis-data\necho \"[install] Persistent directories created.\"\necho \"\"\n\ncat > /mnt/server/start.sh << 'AFFINE_START_SCRIPT'\n#!/bin/bash\necho \"=========================================\"\necho \"  AFFiNE - Pterodactyl\"\necho \"  github.com/DNAniel213/affine-self-hosted-pterodactyl-egg\"\necho \"=========================================\"\n\nAFFINE_HOME=\"\"\nfor candidate in /app /affine /srv/affine /home/affine; do\n    if [ -f \"$candidate/scripts/self-host-predeploy.js\" ]; then\n        AFFINE_HOME=\"$candidate\"\n        break\n    fi\ndone\nif [ -z \"$AFFINE_HOME\" ]; then\n    echo \"[ERROR] Cannot locate AFFiNE (scripts/self-host-predeploy.js not found).\"\n    echo \"[ERROR] Is the Docker image set to ghcr.io/dnaniel213/affine-pterodactyl:stable?\"\n    exit 1\nfi\necho \"[ptero] AFFiNE found at: $AFFINE_HOME\"\n\nmkdir -p /home/container/storage /home/container/config /home/container/redis-data\nmkdir -p /root/.affine\nrm -f /root/.affine/storage /root/.affine/config\nln -sfn /home/container/storage /root/.affine/storage\nln -sfn /home/container/config  /root/.affine/config\necho \"[ptero] Persistent storage symlinks configured.\"\n\nexport AFFINE_SERVER_PORT=\"${SERVER_PORT:-3010}\"\necho \"[ptero] Port: $AFFINE_SERVER_PORT\"\n\nREDIS_HOST=\"${REDIS_SERVER_HOST:-localhost}\"\nif [ \"$REDIS_HOST\" = \"localhost\" ] || [ \"$REDIS_HOST\" = \"127.0.0.1\" ]; then\n    echo \"[ptero] Starting bundled Redis...\"\n    redis-server /etc/redis/redis-ptero.conf \\\n        --daemonize yes \\\n        --dir /home/container/redis-data \\\n        --logfile /home/container/redis.log \\\n        --loglevel notice\n    REDIS_READY=0\n    for i in $(seq 1 30); do\n        if redis-cli ping 2>/dev/null | grep -q PONG; then\n            REDIS_READY=1\n            break\n        fi\n        echo \"[ptero]   waiting for Redis ($i/30)...\"\n        sleep 1\n    done\n    if [ \"$REDIS_READY\" != \"1\" ]; then\n        echo \"[ERROR] Bundled Redis failed. Check /home/container/redis.log\"\n        exit 1\n    fi\n    echo \"[ptero] Bundled Redis ready.\"\nelse\n    echo \"[ptero] External Redis: ${REDIS_HOST}:${REDIS_SERVER_PORT:-6379}\"\nfi\n\necho \"[ptero] Running migration...\"\ncd \"$AFFINE_HOME\"\nif ! node scripts/self-host-predeploy.js; then\n    echo \"[ERROR] Migration failed. Verify DATABASE_URL and PostgreSQL 16+ connectivity.\"\n    exit 1\nfi\necho \"[ptero] Migration complete.\"\n\necho \"[ptero] Starting AFFiNE server...\"\nif [ -f \"$AFFINE_HOME/packages/backend/server/dist/index.js\" ]; then\n    exec node \"$AFFINE_HOME/packages/backend/server/dist/index.js\"\nelif [ -f \"$AFFINE_HOME/dist/index.js\" ]; then\n    exec node \"$AFFINE_HOME/dist/index.js\"\nelif [ -f \"$AFFINE_HOME/packages/backend/server/dist/main.js\" ]; then\n    exec node \"$AFFINE_HOME/packages/backend/server/dist/main.js\"\nelse\n    echo \"[ERROR] Cannot find AFFiNE entry point.\"\n    echo \"[ERROR] Please report: https://github.com/DNAniel213/affine-self-hosted-pterodactyl-egg/issues\"\n    ls -la \"$AFFINE_HOME/\" 2>/dev/null || true\n    exit 1\nfi\nAFFINE_START_SCRIPT\n\nchmod +x /mnt/server/start.sh\necho \"[install] Startup script written.\"\necho \"\"\nPRIVATE_KEY=\"$(openssl rand -hex 32)\"\necho \"=========================================\"\necho \"  INSTALLATION COMPLETE\"\necho \"=========================================\"\necho \"\"\necho \"  >>> COPY THIS PRIVATE KEY NOW <<<\"\necho \"  Paste into your server's AFFINE_PRIVATE_KEY variable\"\necho \"  BEFORE starting. Do NOT change it after data exists.\"\necho \"\"\necho \"  AFFINE_PRIVATE_KEY=${PRIVATE_KEY}\"\necho \"\"\necho \"  REQUIRED BEFORE STARTING:\"\necho \"  1. Set AFFINE_PRIVATE_KEY  <- the key above\"\necho \"  2. Set DATABASE_URL        <- PostgreSQL 16+ URI\"\necho \"     Format: postgresql://user:password@host:5432/dbname\"\necho \"  3. Set AFFINE_SERVER_HOST  <- your domain or public IP\"\necho \"\"\necho \"  BUNDLED REDIS is active by default (REDIS_SERVER_HOST=localhost).\"\necho \"  To use external Redis, set REDIS_SERVER_HOST to its address.\"\necho \"\"\necho \"  Full guide:\"\necho \"  https://github.com/DNAniel213/affine-self-hosted-pterodactyl-egg#readme\"\necho \"==========================================\"",
+      "container": "ghcr.io/pterodactyl/installers:alpine",
+      "entrypoint": "bash"
+    }
+  },
+  "variables": [
+    {
+      "name": "AFFiNE Version",
+      "description": "Release channel for AFFiNE. Must match the Docker image selected above in the Nest tab. Changing this does NOT automatically switch the image — update both.",
+      "env_variable": "AFFINE_REVISION",
+      "default_value": "stable",
+      "user_viewable": true,
+      "user_editable": false,
+      "rules": "required|string|in:stable,beta,canary",
+      "field_type": "text"
+    },
+    {
+      "name": "Private Key",
+      "description": "CRITICAL — 64-char hex key for auth token signing and data encryption. Copy this value from the installer log output. NEVER change it after data has been written to the database — doing so will invalidate all sessions and may corrupt encrypted content.",
+      "env_variable": "AFFINE_PRIVATE_KEY",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": false,
+      "rules": "required|string|min:32",
+      "field_type": "password"
+    },
+    {
+      "name": "Database URL",
+      "description": "PostgreSQL 16+ connection string. Format: postgresql://user:password@host:5432/dbname. The database user needs CREATE TABLE and ALTER TABLE permissions. Recommended providers: Supabase (free), Neon (free).",
+      "env_variable": "DATABASE_URL",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": false,
+      "rules": "required|string",
+      "field_type": "password"
+    },
+    {
+      "name": "Server Domain / Host",
+      "description": "The hostname where AFFiNE is publicly accessible (e.g. affine.example.com). Used to build invite links, email links, and OAuth callbacks. Use a plain IP for local/testing setups.",
+      "env_variable": "AFFINE_SERVER_HOST",
+      "default_value": "localhost",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string",
+      "field_type": "text"
+    },
+    {
+      "name": "HTTPS Enabled",
+      "description": "Set to 'true' if AFFiNE sits behind an SSL-terminating reverse proxy (Nginx, Caddy, Traefik). Determines whether outgoing links are built with https://. Set to 'false' for plain HTTP or local testing.",
+      "env_variable": "AFFINE_SERVER_HTTPS",
+      "default_value": "false",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|in:true,false",
+      "field_type": "text"
+    },
+    {
+      "name": "External URL Override",
+      "description": "Optional. Full base URL including scheme (e.g. https://affine.example.com). If set, this overrides Server Domain + HTTPS Enabled for all external link generation. Leave blank to use the auto-computed value.",
+      "env_variable": "AFFINE_SERVER_EXTERNAL_URL",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string",
+      "field_type": "text"
+    },
+    {
+      "name": "Redis Host",
+      "description": "Redis server hostname. Default 'localhost' uses the Redis instance bundled inside this container — no external Redis needed. Change to an external hostname/IP to use a standalone Redis 6.x or 7.x server.",
+      "env_variable": "REDIS_SERVER_HOST",
+      "default_value": "localhost",
+      "user_viewable": true,
+      "user_editable": false,
+      "rules": "required|string",
+      "field_type": "text"
+    },
+    {
+      "name": "Redis Port",
+      "description": "Redis server port. Leave as 6379 unless using a non-standard external Redis port.",
+      "env_variable": "REDIS_SERVER_PORT",
+      "default_value": "6379",
+      "user_viewable": true,
+      "user_editable": false,
+      "rules": "required|numeric|between:1,65535",
+      "field_type": "text"
+    },
+    {
+      "name": "Redis Password",
+      "description": "Redis authentication password. Leave blank for bundled Redis (no auth) or external Redis with no password.",
+      "env_variable": "REDIS_SERVER_PASSWORD",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": false,
+      "rules": "nullable|string",
+      "field_type": "password"
+    },
+    {
+      "name": "Redis Database Index",
+      "description": "The starting Redis database index for AFFiNE. AFFiNE occupies databases N through N+4. Default 0 is safe. Change only if sharing this Redis instance with other applications.",
+      "env_variable": "REDIS_SERVER_DATABASE",
+      "default_value": "0",
+      "user_viewable": true,
+      "user_editable": false,
+      "rules": "required|numeric|between:0,11",
+      "field_type": "text"
+    },
+    {
+      "name": "Enable Full-Text Indexer",
+      "description": "Enables AFFiNE's full-text search indexer. This is CPU and memory intensive. Disabled by default. See https://docs.affine.pro/self-host-affine/administer/indexer before enabling.",
+      "env_variable": "AFFINE_INDEXER_ENABLED",
+      "default_value": "false",
+      "user_viewable": true,
+      "user_editable": false,
+      "rules": "required|string|in:true,false",
+      "field_type": "text"
+    },
+    {
+      "name": "SMTP Host",
+      "description": "Hostname of your outbound mail server (e.g. smtp.gmail.com). Leave blank to disable email features (invitations, password reset, notifications).",
+      "env_variable": "MAILER_HOST",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": false,
+      "rules": "nullable|string",
+      "field_type": "text"
+    },
+    {
+      "name": "SMTP Port",
+      "description": "SMTP port. Common values: 465 (SSL), 587 (STARTTLS), 25 (plain). Only used if SMTP Host is set.",
+      "env_variable": "MAILER_PORT",
+      "default_value": "465",
+      "user_viewable": true,
+      "user_editable": false,
+      "rules": "nullable|numeric",
+      "field_type": "text"
+    },
+    {
+      "name": "SMTP Username",
+      "description": "Username for SMTP authentication. Only used if SMTP Host is set.",
+      "env_variable": "MAILER_USER",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": false,
+      "rules": "nullable|string",
+      "field_type": "text"
+    },
+    {
+      "name": "SMTP Password",
+      "description": "Password for SMTP authentication. For Gmail, use an App Password (not your Google account password). See https://docs.affine.pro/self-host-affine/administer/email-notifications.",
+      "env_variable": "MAILER_PASSWORD",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": false,
+      "rules": "nullable|string",
+      "field_type": "password"
+    },
+    {
+      "name": "SMTP Sender Address",
+      "description": "The From address for outbound emails. Format: Display Name <email@domain.com>. Example: AFFiNE <noreply@example.com>.",
+      "env_variable": "MAILER_SENDER",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": false,
+      "rules": "nullable|string",
+      "field_type": "text"
+    }
+  ]
+}
