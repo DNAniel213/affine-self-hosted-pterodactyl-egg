@@ -31,11 +31,11 @@ RUN apt-get update \
 # This config binds Redis to 127.0.0.1 only (safe for single-container use).
 COPY conf/redis.conf /etc/redis/redis-ptero.conf
 
-# NestJS GraphQL schema builder tries to mkdir+write /app/src/schema.gql at
-# startup. Pterodactyl Wings runs containers with a read-only root filesystem
-# (only /home/container is a writable bind mount). Pre-create /app/src in this
-# build layer as a symlink into /home/container so the write succeeds at runtime.
-RUN ln -s /home/container/.graphql-schema /app/src
+# NestJS GraphQL schema builder writes /app/src/schema.gql at startup.
+# Wings runs containers with --read-only root fs (only /home/container is a
+# writable bind mount). /tmp is a writable tmpfs mount — point /app/src there
+# so the schema write always succeeds without any runtime setup dependency.
+RUN ln -s /tmp /app/src
 
 # Copy the runtime entrypoint script (baked in so the installer stays simple).
 COPY scripts/entrypoint.sh /entrypoint.sh
@@ -46,7 +46,8 @@ LABEL org.opencontainers.image.source="https://github.com/DNAniel213/affine-self
 LABEL org.opencontainers.image.description="AFFiNE with bundled Redis — for Pterodactyl panel self-hosting"
 LABEL org.opencontainers.image.licenses="MIT"
 
-# Do NOT set ENTRYPOINT or CMD here.
-# Pterodactyl Wings executes the egg's startup command directly inside the
-# container. The egg startup command is: bash /entrypoint.sh
-# /entrypoint.sh is baked into this image and handles all bootstrapping.
+# Use ENTRYPOINT (not CMD) so our init script always runs.
+# Pterodactyl Wings overrides CMD (the egg startup command) but never overrides
+# ENTRYPOINT. This guarantees Redis is started and storage symlinks are set up
+# before AFFiNE boots, regardless of how the server was configured in the panel.
+ENTRYPOINT ["/entrypoint.sh"]

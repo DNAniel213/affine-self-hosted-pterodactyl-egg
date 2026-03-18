@@ -37,9 +37,6 @@ echo "[ptero] Home: $AFFINE_USER_HOME"
 mkdir -p /home/container/storage
 mkdir -p /home/container/config
 mkdir -p /home/container/redis-data
-# /app/src is a symlink (baked into image) pointing here — writable target for
-# the NestJS GraphQL auto-generated schema file written at startup.
-mkdir -p /home/container/.graphql-schema
 
 mkdir -p "$AFFINE_USER_HOME/.affine"
 rm -f "$AFFINE_USER_HOME/.affine/storage" "$AFFINE_USER_HOME/.affine/config"
@@ -66,6 +63,7 @@ if [ "$REDIS_HOST" = "localhost" ] || [ "$REDIS_HOST" = "127.0.0.1" ]; then
     echo "[ptero] Starting bundled Redis..."
     redis-server /etc/redis/redis-ptero.conf \
         --daemonize yes \
+        --pidfile /home/container/redis.pid \
         --dir /home/container/redis-data \
         --logfile /home/container/redis.log \
         --loglevel notice
@@ -106,8 +104,13 @@ echo "[ptero] Migration complete."
 
 # ---------------------------------------------------------------------------
 # 6. Start AFFiNE.
-#    exec replaces this shell process — Pterodactyl Wings monitors it correctly.
-#    Matches the upstream image CMD exactly: node ./dist/main.js from /app.
+#    exec replaces this shell process — Wings monitors it correctly.
+#    $@ is the CMD passed by Wings (e.g. node /app/dist/main.js).
+#    Falls back to the upstream image CMD if Wings passes nothing.
 # ---------------------------------------------------------------------------
 echo "[ptero] Starting AFFiNE server..."
-exec node /app/dist/main.js
+if [ "$#" -gt 0 ]; then
+    exec "$@"
+else
+    exec node /app/dist/main.js
+fi

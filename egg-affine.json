@@ -16,7 +16,7 @@
     "AFFiNE Canary": "ghcr.io/dnaniel213/affine-pterodactyl:canary"
   },
   "file_denylist": [],
-  "startup": "bash /entrypoint.sh",
+  "startup": "node /app/dist/main.js",
   "config": {
     "files": "{}",
     "startup": "{\"done\": \"Nest application successfully started\"}",
