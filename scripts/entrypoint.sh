@@ -37,6 +37,9 @@ echo "[ptero] Home: $AFFINE_USER_HOME"
 mkdir -p /home/container/storage
 mkdir -p /home/container/config
 mkdir -p /home/container/redis-data
+# /app/src is a symlink (baked into image) pointing here — writable target for
+# the NestJS GraphQL auto-generated schema file written at startup.
+mkdir -p /home/container/.graphql-schema
 
 mkdir -p "$AFFINE_USER_HOME/.affine"
 rm -f "$AFFINE_USER_HOME/.affine/storage" "$AFFINE_USER_HOME/.affine/config"

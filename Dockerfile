@@ -31,6 +31,12 @@ RUN apt-get update \
 # This config binds Redis to 127.0.0.1 only (safe for single-container use).
 COPY conf/redis.conf /etc/redis/redis-ptero.conf
 
+# NestJS GraphQL schema builder tries to mkdir+write /app/src/schema.gql at
+# startup. Pterodactyl Wings runs containers with a read-only root filesystem
+# (only /home/container is a writable bind mount). Pre-create /app/src in this
+# build layer as a symlink into /home/container so the write succeeds at runtime.
+RUN ln -s /home/container/.graphql-schema /app/src
+
 # Copy the runtime entrypoint script (baked in so the installer stays simple).
 COPY scripts/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
