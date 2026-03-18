@@ -11,9 +11,9 @@
   "description": "Host AFFiNE — the next-gen knowledge base and workspace — on Pterodactyl. Redis is bundled inside the container. Requires an external PostgreSQL 16+ database. See the README for full setup instructions.",
   "features": [],
   "docker_images": {
-    "AFFiNE Stable (Recommended)": "ghcr.io/dnaniel213/affine-pterodactyl:stable",
+    "AFFiNE Stable": "ghcr.io/dnaniel213/affine-pterodactyl:stable",
     "AFFiNE Beta": "ghcr.io/dnaniel213/affine-pterodactyl:beta",
-    "AFFiNE Canary (Unstable)": "ghcr.io/dnaniel213/affine-pterodactyl:canary"
+    "AFFiNE Canary": "ghcr.io/dnaniel213/affine-pterodactyl:canary"
   },
   "file_denylist": [],
   "startup": "bash /entrypoint.sh",
