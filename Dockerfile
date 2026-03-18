@@ -31,6 +31,10 @@ RUN apt-get update \
 # This config binds Redis to 127.0.0.1 only (safe for single-container use).
 COPY conf/redis.conf /etc/redis/redis-ptero.conf
 
+# Copy the runtime entrypoint script (baked in so the installer stays simple).
+COPY scripts/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Labels for GitHub Container Registry
 LABEL org.opencontainers.image.source="https://github.com/DNAniel213/affine-self-hosted-pterodactyl-egg"
 LABEL org.opencontainers.image.description="AFFiNE with bundled Redis — for Pterodactyl panel self-hosting"
@@ -38,5 +42,5 @@ LABEL org.opencontainers.image.licenses="MIT"
 
 # Do NOT set ENTRYPOINT or CMD here.
 # Pterodactyl Wings executes the egg's startup command directly inside the
-# container. The start.sh script (installed to /home/container/start.sh by the
-# egg's install script) handles all bootstrapping logic.
+# container. The egg startup command is: bash /entrypoint.sh
+# /entrypoint.sh is baked into this image and handles all bootstrapping.

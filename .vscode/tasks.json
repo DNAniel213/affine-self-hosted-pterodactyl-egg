@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "patch-egg-json",
+			"type": "shell",
+			"command": "python3 /tmp/patch_egg.py && echo PATCHED",
+			"isBackground": false
+		}
+	]
+}
